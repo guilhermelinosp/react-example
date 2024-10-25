@@ -1,0 +1,43 @@
+{
+  "name": "react-webpack",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm rb rimraf ./dist && webpack --mode production",
+    "start:dev": "webpack serve --open --mode development",
+    "start:prod": "webpack --mode production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.8",
+    "@babel/preset-env": "^7.25.8",
+    "@babel/preset-react": "^7.25.7",
+    "@types/prop-types": "^15.7.13",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "babel-loader": "^9.2.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "html-webpack-plugin": "^5.6.2",
+    "mini-css-extract-plugin": "^2.9.1",
+    "rimraf": "^6.0.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.3",
+    "web-vitals": "^2.1.4",
+    "webpack": "^5.95.0",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0",
+    "workbox-webpack-plugin": "^7.1.0"
+  }
+}

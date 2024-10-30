@@ -1,11 +1,10 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin'); // For PWA
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin'); // For CSS extraction
+const Dotenv = require('dotenv-webpack');
 
 module.exports = (env, argv) => {
   const isProd = argv.mode === 'production';
@@ -66,12 +65,28 @@ module.exports = (env, argv) => {
     plugins: [
       new CleanWebpackPlugin(), // Clean output directory before each build
       new HtmlWebpackPlugin({
-        template: './public/index.html', // Use an HTML template for the entry point
-        inject: true, // Injects scripts into the HTML
+        template: './public/index.html', // Template for the index.html
+        minify: isProd ? {
+          removeComments: true,
+          collapseWhitespace: true,
+          removeRedundantAttributes: true,
+          useShortDoctype: true,
+          removeEmptyAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          keepClosingSlash: true,
+          minifyJS: true,
+          minifyCSS: true,
+          minifyURLs: true,
+        } : false,
       }),
       new MiniCssExtractPlugin({
         filename: isProd ? '[name].[contenthash].css' : '[name].css', // Extract CSS files
       }),
+      new BundleAnalyzerPlugin({
+        analyzerMode: isProd ? 'static' : 'disabled', // Only generate report in production
+        openAnalyzer: false,
+      }),
+      new Dotenv(), // Load environment variables from .env file
     ],
     devtool: isProd ? 'source-map' : 'inline-source-map', // Enable source maps in development
     devServer: {

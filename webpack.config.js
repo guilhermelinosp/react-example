@@ -5,6 +5,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const Dotenv = require('dotenv-webpack');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 module.exports = (env, argv) => {
   const isProd = argv.mode === 'production';
@@ -15,21 +16,51 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
-      publicPath: '/', // Serve all assets from the root
-      clean: true, // Clean the output directory before each build
+      publicPath: '/',
+      clean: true,
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx'], // Resolve these file types
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
     },
     optimization: {
-      minimize: isProd, // Enable minimization in production
-      minimizer: [new TerserPlugin()],
+      minimize: isProd,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            compress: {
+              drop_console: true,
+            },
+          },
+        }),
+        new CssMinimizerPlugin(),
+      ],
       splitChunks: {
-        chunks: 'all', // Split vendor and app code for better caching
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 100000,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        automaticNameDelimiter: '~',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name(module) {
+              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+              return `npm.${packageName.replace('@', '')}`;
+            },
+            chunks: 'all',
+            minSize: 20000,
+            maxSize: 100000,
+          },
+        },
       },
       runtimeChunk: {
-        name: 'runtime', // Generate a separate runtime chunk for better caching
+        name: 'runtime',
       },
+    },
+    cache: {
+      type: 'filesystem',
     },
     module: {
       rules: [
@@ -49,23 +80,44 @@ module.exports = (env, argv) => {
           },
         },
         {
-          test: /\.css$/, // Add support for CSS
+          test: /\.css$/,
           use: [MiniCssExtractPlugin.loader, 'css-loader'],
         },
         {
-          test: /\.(png|jpe?g|gif|svg)$/i, // Add support for images
+          test: /\.(png|jpe?g|gif|svg)$/i,
           type: 'asset/resource',
+          use: [
+            {
+              loader: 'image-webpack-loader',
+              options: {
+                mozjpeg: {
+                  progressive: true,
+                  quality: 75,
+                },
+                pngquant: {
+                  quality: [0.65, 0.90],
+                  speed: 4,
+                },
+                gifsicle: {
+                  interlaced: false,
+                },
+                webp: {
+                  quality: 75,
+                },
+              },
+            },
+          ],
         },
         {
-          test: /\.(woff|woff2|eot|ttf|otf)$/, // Add support for fonts
+          test: /\.(woff|woff2|eot|ttf|otf)$/,
           type: 'asset/resource',
         },
       ],
     },
     plugins: [
-      new CleanWebpackPlugin(), // Clean output directory before each build
+      new CleanWebpackPlugin(),
       new HtmlWebpackPlugin({
-        template: './public/index.html', // Template for the index.html
+        template: './public/index.html',
         minify: isProd ? {
           removeComments: true,
           collapseWhitespace: true,
@@ -80,23 +132,23 @@ module.exports = (env, argv) => {
         } : false,
       }),
       new MiniCssExtractPlugin({
-        filename: isProd ? '[name].[contenthash].css' : '[name].css', // Extract CSS files
+        filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
       new BundleAnalyzerPlugin({
-        analyzerMode: isProd ? 'static' : 'disabled', // Only generate report in production
+        analyzerMode: isProd ? 'static' : 'disabled',
         openAnalyzer: false,
       }),
-      new Dotenv(), // Load environment variables from .env file
+      new Dotenv(),
     ],
-    devtool: isProd ? 'source-map' : 'inline-source-map', // Enable source maps in development
+    devtool: isProd ? 'source-map' : 'inline-source-map',
     devServer: {
       static: {
-        directory: path.resolve(__dirname, 'dist'), // Serve from the 'dist' directory
+        directory: path.resolve(__dirname, 'dist'),
       },
       compress: true,
       port: 9001,
       open: true,
-      historyApiFallback: true, // Support for single-page applications
+      historyApiFallback: true,
     },
     stats: {
       children: true,
